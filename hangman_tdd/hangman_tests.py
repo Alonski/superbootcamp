@@ -2,16 +2,17 @@
 
 
 import unittest
-from hangman_tdd import Hangman
-
-class Boom(Exception):
-    pass
-
-def foo(n):
-    if n == 7:
-        raise Boom("!")
+from hangman_tdd import Hangman, GameOver
 
 SECRET_WORD = 'helloool'
+
+
+class GameOver(Exception):
+    def __init__(self, word):
+        # Call the base class constructor with the parameters it needs
+        Exception.__init__(self, 'The word was "{}"'.format(word))
+
+
 class TestHangman(unittest.TestCase):
     def setUp(self):
         """Runs Before Each Test"""
@@ -22,7 +23,7 @@ class TestHangman(unittest.TestCase):
         pass
 
     def test_status(self):
-        self.assertEquals(self.game.status(), ('?'*len(SECRET_WORD)))
+        self.assertEquals(self.game.status(), ('?' * len(SECRET_WORD)))
 
     def test_good_guess(self):
         self.game.guess('h')
@@ -32,32 +33,53 @@ class TestHangman(unittest.TestCase):
         self.game.guess('r')
         self.assertEquals(self.game.status(), '????????')
 
-    def test_multiple_guess(self):
+    def test_two_letters_in_word_guess(self):
         self.game.guess('l')
         self.assertEquals(self.game.status(), '??ll???l')
 
-    def test_multiple_guess2(self):
+    def test_many_letters_in_word_guess(self):
         self.game.guess('o')
         self.assertEquals(self.game.status(), '????ooo?')
 
-    def test_six(self):
-        foo(6)
+    def test_multiple_correct_guesses(self):
+        self.game.guess('h')
+        # print(self.game.status())
+        self.game.guess('e')
+        # print(self.game.status())
+        self.game.guess('l')
+        # print(self.game.status())
+        self.game.guess('o')
+        # print(self.game.status())
+        self.assertEquals(self.game.status(), 'helloool')
 
-    def test_seven(self):
-        with self.assertRaises(Boom):
-            foo(7)
+    def test_multiple_mixed_guesses(self):
+        self.game.guess('h')
+        # print(self.game.status())
+        self.game.guess('r')
+        # print(self.game.status())
+        self.game.guess('l')
+        # print(self.game.status())
+        self.game.guess('q')
+        # print(self.game.status())
+        self.assertEquals(self.game.status(), 'h?ll???l')
 
-        # self.assertRaises(Boom, foo, 7)
-        # try:
-        #     foo(7)
-        #     assert False, "Not Good!"
-        # except Boom:
-        #     pass
+    def test_tries_left(self):
+        self.assertEquals(self.game.tries, 10)
+        self.game.guess('h')
+        self.assertEquals(self.game.tries, 10)
+        self.game.guess('r')
+        self.assertEquals(self.game.tries, 9)
+        self.game.guess('o')
+        self.assertEquals(self.game.tries, 9)
 
+    def test_game_over(self):
+        def lets_raise(letter):
+            self.game.lets()
+            for i in range(10):
+                self.game.guess(letter)
 
-    # def test_won(self):
-    #     self.game.guess_word(SECRET_WORD)
-    #     self.assertEquals(self.)
+        self.assertRaises(GameOver, lets_raise, 'r')
+
 
 if __name__ == '__main__':
     unittest.main()
